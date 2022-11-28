@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.189">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Sebastian Ayala-Ruano">
+<meta name="dcterms.date" content="2022-11-28">
+
+<title>R programming skills summary - Experimental Design and Data Management 2022 - 1&nbsp; Week3 - Introduction to Gene expression analysis part 1</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./MSB1005_SkillsTrainingWeek4_2022.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Week3 - Introduction to Gene expression analysis part 1</span></h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">R programming skills summary - Experimental Design and Data Management 2022</a> 
+    </div>
+      </div>
+      <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">Preface</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MSB1005_SkillsTrainingWeek3_2022.html" class="sidebar-item-text sidebar-link active"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Week3 - Introduction to Gene expression analysis part 1</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MSB1005_SkillsTrainingWeek4_2022.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Week4 - Introduction to Gene expression analysis part 2</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#assignment-1-importing-the-data-and-inspecting-sample-information" id="toc-assignment-1-importing-the-data-and-inspecting-sample-information" class="nav-link active" data-scroll-target="#assignment-1-importing-the-data-and-inspecting-sample-information"><span class="toc-section-number">1.1</span>  Assignment 1: Importing the data and inspecting sample information</a>
+  <ul class="collapse">
+  <li><a href="#using-the-sampleinfo-object-answer-the-following-questions-what-does-dcm-hcm-and-ppcm-stand-for-hint-google" id="toc-using-the-sampleinfo-object-answer-the-following-questions-what-does-dcm-hcm-and-ppcm-stand-for-hint-google" class="nav-link" data-scroll-target="#using-the-sampleinfo-object-answer-the-following-questions-what-does-dcm-hcm-and-ppcm-stand-for-hint-google"><span class="toc-section-number">1.1.1</span>  Using the sampleInfo object, answer the following questions: What does DCM, HCM and PPCM stand for? (hint: Google)</a></li>
+  <li><a href="#how-many-co-variates-are-there-what-do-they-mean-what-type-of-value-does-each-contain-e.g.-binary-continuous-categorical" id="toc-how-many-co-variates-are-there-what-do-they-mean-what-type-of-value-does-each-contain-e.g.-binary-continuous-categorical" class="nav-link" data-scroll-target="#how-many-co-variates-are-there-what-do-they-mean-what-type-of-value-does-each-contain-e.g.-binary-continuous-categorical"><span class="toc-section-number">1.1.2</span>  How many co-variates are there? What do they mean? What type of value does each contain? (e.g.&nbsp;binary, continuous, categorical)</a></li>
+  <li><a href="#are-all-variables-measured-in-all-individuals" id="toc-are-all-variables-measured-in-all-individuals" class="nav-link" data-scroll-target="#are-all-variables-measured-in-all-individuals"><span class="toc-section-number">1.1.3</span>  Are all variables measured in all individuals?</a></li>
+  <li><a href="#using-the-sampleinfo-object-create-an-overview-of-the-sample-sizes-and-characteristics-in-each-disease-category-how-many-individuals-are-healthy-how-many-suffer-from-dcm-hcm-ppcm" id="toc-using-the-sampleinfo-object-create-an-overview-of-the-sample-sizes-and-characteristics-in-each-disease-category-how-many-individuals-are-healthy-how-many-suffer-from-dcm-hcm-ppcm" class="nav-link" data-scroll-target="#using-the-sampleinfo-object-create-an-overview-of-the-sample-sizes-and-characteristics-in-each-disease-category-how-many-individuals-are-healthy-how-many-suffer-from-dcm-hcm-ppcm"><span class="toc-section-number">1.1.4</span>  Using the sampleInfo object, create an overview of the sample sizes and characteristics in each disease category: How many individuals are healthy? How many suffer from DCM, HCM, PPCM?</a></li>
+  <li><a href="#what-is-the-average-age-in-each-disease-category" id="toc-what-is-the-average-age-in-each-disease-category" class="nav-link" data-scroll-target="#what-is-the-average-age-in-each-disease-category"><span class="toc-section-number">1.1.5</span>  What is the average age in each disease category?</a></li>
+  <li><a href="#how-many-male-and-female-individuals-are-there-in-each-disease-category" id="toc-how-many-male-and-female-individuals-are-there-in-each-disease-category" class="nav-link" data-scroll-target="#how-many-male-and-female-individuals-are-there-in-each-disease-category"><span class="toc-section-number">1.1.6</span>  How many male and female individuals are there in each disease category?</a></li>
+  <li><a href="#are-there-other-characteristics-that-are-strikingly-different-between-groups" id="toc-are-there-other-characteristics-that-are-strikingly-different-between-groups" class="nav-link" data-scroll-target="#are-there-other-characteristics-that-are-strikingly-different-between-groups"><span class="toc-section-number">1.1.7</span>  Are there other characteristics that are strikingly different between groups?</a></li>
+  </ul></li>
+  <li><a href="#assignment-2-data-exploration-on-the-sample-level" id="toc-assignment-2-data-exploration-on-the-sample-level" class="nav-link" data-scroll-target="#assignment-2-data-exploration-on-the-sample-level"><span class="toc-section-number">1.2</span>  Assignment 2: Data exploration on the sample level</a>
+  <ul class="collapse">
+  <li><a href="#the-gene-expression-dataset-contains-so-called-log2-transformed-cpm-counts-per-million-values-how-are-cpm-values-created-from-raw-rna-sequencing-count-data-and-why-is-this-needed-hint-google-what-the-fpkm" id="toc-the-gene-expression-dataset-contains-so-called-log2-transformed-cpm-counts-per-million-values-how-are-cpm-values-created-from-raw-rna-sequencing-count-data-and-why-is-this-needed-hint-google-what-the-fpkm" class="nav-link" data-scroll-target="#the-gene-expression-dataset-contains-so-called-log2-transformed-cpm-counts-per-million-values-how-are-cpm-values-created-from-raw-rna-sequencing-count-data-and-why-is-this-needed-hint-google-what-the-fpkm"><span class="toc-section-number">1.2.1</span>  The gene expression dataset contains so-called log2-transformed CPM (counts per million) values: How are CPM values created from raw RNA-sequencing count data? And why is this needed? (HINT: Google “what the fpkm”)</a></li>
+  <li><a href="#create-and-interpret-4-figures-containing-boxplots-for-all-samples-in-the-dataset-one-for-dcm-one-figure-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls." id="toc-create-and-interpret-4-figures-containing-boxplots-for-all-samples-in-the-dataset-one-for-dcm-one-figure-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls." class="nav-link" data-scroll-target="#create-and-interpret-4-figures-containing-boxplots-for-all-samples-in-the-dataset-one-for-dcm-one-figure-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls."><span class="toc-section-number">1.2.2</span>  Create and interpret 4 figures containing boxplots for all samples in the dataset, one for DCM, one figure for HCM, one for PPCM and one for the healthy controls.</a></li>
+  <li><a href="#create-and-interpret-4-figures-containing-density-plots-for-all-samples-in-the-dataset-one-figure-for-dcm-one-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls." id="toc-create-and-interpret-4-figures-containing-density-plots-for-all-samples-in-the-dataset-one-figure-for-dcm-one-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls." class="nav-link" data-scroll-target="#create-and-interpret-4-figures-containing-density-plots-for-all-samples-in-the-dataset-one-figure-for-dcm-one-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls."><span class="toc-section-number">1.2.3</span>  Create and interpret 4 figures containing density plots for all samples in the dataset, one figure for DCM, one for HCM, one for PPCM and one for the healthy controls.</a></li>
+  <li><a href="#assess-the-normality-of-all-samples-and-summarize-the-results-in-a-table-or-figure.-hint-try-shapiro.test" id="toc-assess-the-normality-of-all-samples-and-summarize-the-results-in-a-table-or-figure.-hint-try-shapiro.test" class="nav-link" data-scroll-target="#assess-the-normality-of-all-samples-and-summarize-the-results-in-a-table-or-figure.-hint-try-shapiro.test"><span class="toc-section-number">1.2.4</span>  Assess the normality of all samples and summarize the results in a table or figure. (HINT: try ‘shapiro.test’)</a></li>
+  <li><a href="#perform-a-principal-component-analysis-pca-visualize-the-results-and-color-by-the-disease-category-sex-and-other-variables-of-interest.-interpret-the-results-what-patterns-do-you-see" id="toc-perform-a-principal-component-analysis-pca-visualize-the-results-and-color-by-the-disease-category-sex-and-other-variables-of-interest.-interpret-the-results-what-patterns-do-you-see" class="nav-link" data-scroll-target="#perform-a-principal-component-analysis-pca-visualize-the-results-and-color-by-the-disease-category-sex-and-other-variables-of-interest.-interpret-the-results-what-patterns-do-you-see"><span class="toc-section-number">1.2.5</span>  Perform a principal component analysis (PCA), visualize the results and color by the disease category, sex and other variables of interest. Interpret the results: what patterns do you see?</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Week3 - Introduction to Gene expression analysis part 1</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Sebastian Ayala-Ruano </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 28, 2022</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<p>This R script serves as a scaffold for adding the code required to fulfill the assignments. It includes the assignments as well as a few hints.</p>
+<p>Add the necessary code and type your answers in this document for your own record.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(biomaRt)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pcaMethods)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(conflicted)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="assignment-1-importing-the-data-and-inspecting-sample-information" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="assignment-1-importing-the-data-and-inspecting-sample-information"><span class="header-section-number">1.1</span> Assignment 1: Importing the data and inspecting sample information</h2>
+<p>After unzipping the required transcriptomics (gene expression) file and sample information file, import both files as two separate objects. First set the active working directory to the folder containing the files.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>gxData <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="st">"Data/MAGNET_GeneExpressionData_CPM_19112020.txt"</span>, <span class="at">delim =</span><span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>sampleInfo <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"Data/MAGNET_SampleData_18112022.csv"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Add gene ID as the row names</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>gxData <span class="ot">&lt;-</span> <span class="fu">column_to_rownames</span>(gxData, <span class="at">var =</span> <span class="st">"EnsemblGeneID"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Add sample name as the row names</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>sampleInfo <span class="ot">&lt;-</span> <span class="fu">column_to_rownames</span>(sampleInfo, <span class="at">var =</span> <span class="st">"sample_name"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="using-the-sampleinfo-object-answer-the-following-questions-what-does-dcm-hcm-and-ppcm-stand-for-hint-google" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="using-the-sampleinfo-object-answer-the-following-questions-what-does-dcm-hcm-and-ppcm-stand-for-hint-google"><span class="header-section-number">1.1.1</span> Using the sampleInfo object, answer the following questions: What does DCM, HCM and PPCM stand for? (hint: Google)</h3>
+<ul>
+<li><strong>DCM:</strong> Dilated cardiomyopathy</li>
+<li><strong>HCM:</strong> Hypertrophic cardiomyopathy</li>
+<li><strong>PPCM:</strong> Postpartum cardiomyopathy</li>
+</ul>
+</section>
+<section id="how-many-co-variates-are-there-what-do-they-mean-what-type-of-value-does-each-contain-e.g.-binary-continuous-categorical" class="level3" data-number="1.1.2">
+<h3 data-number="1.1.2" class="anchored" data-anchor-id="how-many-co-variates-are-there-what-do-they-mean-what-type-of-value-does-each-contain-e.g.-binary-continuous-categorical"><span class="header-section-number">1.1.2</span> How many co-variates are there? What do they mean? What type of value does each contain? (e.g.&nbsp;binary, continuous, categorical)</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of covariates</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>n_co_variates <span class="ot">=</span> <span class="fu">ncol</span>(sampleInfo)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Types of variables of covariates</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sampleInfo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   366 obs. of  19 variables:
+ $ tissue_source: chr  "NF" "NF" "NF" "NF" ...
+ $ etiology     : chr  "NF" "NF" "NF" "NF" ...
+ $ gender       : chr  "Male" "Male" "Male" "Female" ...
+ $ race         : chr  "AA" "AA" "AA" "AA" ...
+ $ age          : num  18 26 17 59 59 50 15 53 62 16 ...
+ $ weight       : num  70 85 68 66 87 87 70 91 56 67 ...
+ $ height       : num  175 183 173 157 157 175 183 165 168 163 ...
+ $ hw           : num  NA NA 400 380 NA 640 NA NA NA 256 ...
+ $ lv_mass      : num  NA NA NA NA NA NA NA NA NA NA ...
+ $ afib         : chr  "No" "No" "No" "No" ...
+ $ VTVF         : chr  "No" "No" "No" "No" ...
+ $ Diabetes     : chr  "No" "No" "No" "No" ...
+ $ Hypertension : chr  "No" "No" "No" "Yes" ...
+ $ LVEF         : num  0.37 NA 0.27 0.6 0.55 0.65 0.15 NA NA 0.51 ...
+ $ RIN          : num  8.4 9.1 7.8 9.4 8.8 8.6 7.8 10 7.8 6.4 ...
+ $ Library.Pool : chr  "Magnet_10" "Magnet_11" "Magnet_09" "Magnet_06" ...
+ $ disease_race : chr  "AA_NF" "AA_NF" "AA_NF" "AA_NF" ...
+ $ minexpr      : num  7.47 7.47 7.47 7.47 7.47 ...
+ $ TIN.median.  : num  72.8 74.3 77.4 69.5 73.6 ...</code></pre>
+</div>
+</div>
+<p>The number of co-variates is <strong>19</strong>.</p>
+<p>Covariates are variables known to affect disease susceptibility and are independent of tested genotypes at the population level. They are used to control for confounding factors in the analysis of the association between a disease and a genetic variant.</p>
+</section>
+<section id="are-all-variables-measured-in-all-individuals" class="level3" data-number="1.1.3">
+<h3 data-number="1.1.3" class="anchored" data-anchor-id="are-all-variables-measured-in-all-individuals"><span class="header-section-number">1.1.3</span> Are all variables measured in all individuals?</h3>
+<p>No, there are NA values in some columns, which means that these values were not measured.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>na_values <span class="ot">&lt;-</span> sampleInfo <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">everything</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_all</span>(<span class="fu">list</span>(<span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.))))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>na_values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  tissue_source etiology gender race age weight height hw lv_mass afib VTVF
+1             0        0      0    0   0      0      1  7     207    5    2
+  Diabetes Hypertension LVEF RIN Library.Pool disease_race minexpr TIN.median.
+1        2            1   80   6            0            0       0           0</code></pre>
+</div>
+</div>
+</section>
+<section id="using-the-sampleinfo-object-create-an-overview-of-the-sample-sizes-and-characteristics-in-each-disease-category-how-many-individuals-are-healthy-how-many-suffer-from-dcm-hcm-ppcm" class="level3" data-number="1.1.4">
+<h3 data-number="1.1.4" class="anchored" data-anchor-id="using-the-sampleinfo-object-create-an-overview-of-the-sample-sizes-and-characteristics-in-each-disease-category-how-many-individuals-are-healthy-how-many-suffer-from-dcm-hcm-ppcm"><span class="header-section-number">1.1.4</span> Using the sampleInfo object, create an overview of the sample sizes and characteristics in each disease category: How many individuals are healthy? How many suffer from DCM, HCM, PPCM?</h3>
+<p><strong>Method 1</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>etiology1 <span class="ot">&lt;-</span> sampleInfo <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(etiology) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>etiology1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>etiology
+ DCM  HCM   NF PPCM 
+ 166   28  166    6 </code></pre>
+</div>
+</div>
+<p><strong>Method 2</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>etiology2 <span class="ot">&lt;-</span> sampleInfo <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(etiology)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>etiology2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  etiology   n
+1      DCM 166
+2      HCM  28
+3       NF 166
+4     PPCM   6</code></pre>
+</div>
+</div>
+<p><strong>Method 3</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>etiology3 <span class="ot">&lt;-</span> sampleInfo <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(etiology) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tally</span>()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>etiology3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 2
+  etiology     n
+  &lt;chr&gt;    &lt;int&gt;
+1 DCM        166
+2 HCM         28
+3 NF         166
+4 PPCM         6</code></pre>
+</div>
+</div>
+</section>
+<section id="what-is-the-average-age-in-each-disease-category" class="level3" data-number="1.1.5">
+<h3 data-number="1.1.5" class="anchored" data-anchor-id="what-is-the-average-age-in-each-disease-category"><span class="header-section-number">1.1.5</span> What is the average age in each disease category?</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>avg_etiology_by_age <span class="ot">&lt;-</span> sampleInfo <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(etiology) <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">age =</span> <span class="fu">mean</span>(age, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>avg_etiology_by_age</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+  etiology     n   age
+  &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;
+1 DCM        166  52.1
+2 HCM         28  48.7
+3 NF         166  55.9
+4 PPCM         6  34.7</code></pre>
+</div>
+</div>
+</section>
+<section id="how-many-male-and-female-individuals-are-there-in-each-disease-category" class="level3" data-number="1.1.6">
+<h3 data-number="1.1.6" class="anchored" data-anchor-id="how-many-male-and-female-individuals-are-there-in-each-disease-category"><span class="header-section-number">1.1.6</span> How many male and female individuals are there in each disease category?</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>count_etiology_by_gender <span class="ot">&lt;-</span> sampleInfo <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(etiology) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(gender)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>count_etiology_by_gender</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+# Groups:   etiology [4]
+  etiology gender     n
+  &lt;chr&gt;    &lt;chr&gt;  &lt;int&gt;
+1 DCM      Female    66
+2 DCM      Male     100
+3 HCM      Female    11
+4 HCM      Male      17
+5 NF       Female    89
+6 NF       Male      77
+7 PPCM     Female     6</code></pre>
+</div>
+</div>
+</section>
+<section id="are-there-other-characteristics-that-are-strikingly-different-between-groups" class="level3" data-number="1.1.7">
+<h3 data-number="1.1.7" class="anchored" data-anchor-id="are-there-other-characteristics-that-are-strikingly-different-between-groups"><span class="header-section-number">1.1.7</span> Are there other characteristics that are strikingly different between groups?</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sampleInfo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> tissue_source        etiology            gender              race          
+ Length:366         Length:366         Length:366         Length:366        
+ Class :character   Class :character   Class :character   Class :character  
+ Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+                                                                            
+                                                                            
+                                                                            
+                                                                            
+      age            weight           height            hw       
+ Min.   :15.00   Min.   : 27.00   Min.   : 55.0   Min.   :151.0  
+ 1st Qu.:48.00   1st Qu.: 66.00   1st Qu.:163.0   1st Qu.:371.5  
+ Median :55.00   Median : 78.00   Median :170.0   Median :448.0  
+ Mean   :53.28   Mean   : 81.19   Mean   :168.7   Mean   :468.8  
+ 3rd Qu.:62.00   3rd Qu.: 91.00   3rd Qu.:178.0   3rd Qu.:556.5  
+ Max.   :83.00   Max.   :267.00   Max.   :196.0   Max.   :923.0  
+                                  NA's   :1       NA's   :7      
+    lv_mass          afib               VTVF             Diabetes        
+ Min.   :104.0   Length:366         Length:366         Length:366        
+ 1st Qu.:195.0   Class :character   Class :character   Class :character  
+ Median :247.0   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :266.0                                                           
+ 3rd Qu.:321.5                                                           
+ Max.   :613.0                                                           
+ NA's   :207                                                             
+ Hypertension            LVEF             RIN         Library.Pool      
+ Length:366         Min.   :0.0500   Min.   : 5.800   Length:366        
+ Class :character   1st Qu.:0.1500   1st Qu.: 8.100   Class :character  
+ Mode  :character   Median :0.2000   Median : 8.500   Mode  :character  
+                    Mean   :0.3068   Mean   : 8.451                     
+                    3rd Qu.:0.5200   3rd Qu.: 8.900                     
+                    Max.   :0.8000   Max.   :10.000                     
+                    NA's   :80       NA's   :6                          
+ disease_race          minexpr       TIN.median.   
+ Length:366         Min.   :7.469   Min.   :23.38  
+ Class :character   1st Qu.:7.469   1st Qu.:61.26  
+ Mode  :character   Median :7.469   Median :70.12  
+                    Mean   :7.469   Mean   :65.03  
+                    3rd Qu.:7.469   3rd Qu.:73.32  
+                    Max.   :7.469   Max.   :81.52  
+                                                   </code></pre>
+</div>
+</div>
+<p>An example of two features that are different between groups:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(sampleInfo, <span class="fu">aes</span>(<span class="at">x=</span> LVEF, <span class="at">y =</span> lv_mass, <span class="at">color =</span> etiology)) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="assignment-2-data-exploration-on-the-sample-level" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="assignment-2-data-exploration-on-the-sample-level"><span class="header-section-number">1.2</span> Assignment 2: Data exploration on the sample level</h2>
+<section id="the-gene-expression-dataset-contains-so-called-log2-transformed-cpm-counts-per-million-values-how-are-cpm-values-created-from-raw-rna-sequencing-count-data-and-why-is-this-needed-hint-google-what-the-fpkm" class="level3" data-number="1.2.1">
+<h3 data-number="1.2.1" class="anchored" data-anchor-id="the-gene-expression-dataset-contains-so-called-log2-transformed-cpm-counts-per-million-values-how-are-cpm-values-created-from-raw-rna-sequencing-count-data-and-why-is-this-needed-hint-google-what-the-fpkm"><span class="header-section-number">1.2.1</span> The gene expression dataset contains so-called log2-transformed CPM (counts per million) values: How are CPM values created from raw RNA-sequencing count data? And why is this needed? (HINT: Google “what the fpkm”)</h3>
+<p>FPKM stands for fragments per kilobase of exon per million mapped fragments. It is used specifically in paired-end RNA-seq experiments. The interpretation of FPKM is that if you sequence your RNA sample again, you expect to see for gene i, FPKMi reads divided by gene i length over a thousand and divided by the total number of reads mapped over a million.</p>
+</section>
+<section id="create-and-interpret-4-figures-containing-boxplots-for-all-samples-in-the-dataset-one-for-dcm-one-figure-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls." class="level3" data-number="1.2.2">
+<h3 data-number="1.2.2" class="anchored" data-anchor-id="create-and-interpret-4-figures-containing-boxplots-for-all-samples-in-the-dataset-one-for-dcm-one-figure-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls."><span class="header-section-number">1.2.2</span> Create and interpret 4 figures containing boxplots for all samples in the dataset, one for DCM, one figure for HCM, one for PPCM and one for the healthy controls.</h3>
+<p>Create dataframes with information of the samples in each disease category.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a vector of the names of etiologies</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>names_et <span class="ot">&lt;-</span> etiology2<span class="sc">$</span>etiology</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the names of the samples per etiology</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> names_et){</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Define the name of the dataframes with the list of samples per etiology</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    var_name <span class="ot">&lt;-</span> <span class="fu">paste</span>(i,<span class="st">"columns"</span>,<span class="at">sep =</span> <span class="st">"_"</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get the dataframes with the list of sample names per etiology</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    df <span class="ot">&lt;-</span> <span class="fu">rownames_to_column</span>(sampleInfo, <span class="at">var =</span> <span class="st">"sample"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">filter</span>(etiology <span class="sc">==</span> i) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">select</span>(sample) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>              <span class="fu">pull</span>(sample)</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Assign the names to the dataframes</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(var_name, df)</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="boxplot-of-nf-patients" class="level4" data-number="1.2.2.1">
+<h4 data-number="1.2.2.1" class="anchored" data-anchor-id="boxplot-of-nf-patients"><span class="header-section-number">1.2.2.1</span> Boxplot of NF patients</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>NF_data <span class="ot">&lt;-</span> gxData <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>           dplyr<span class="sc">::</span><span class="fu">select</span>(NF_columns)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>NF_data_group <span class="ot">&lt;-</span> <span class="fu">gather</span>(NF_data) <span class="co"># melt also works, but it is deprecated</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(NF_data_group, <span class="fu">aes</span>(<span class="at">x =</span> key, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="boxplot-of-dcm-patients" class="level4" data-number="1.2.2.2">
+<h4 data-number="1.2.2.2" class="anchored" data-anchor-id="boxplot-of-dcm-patients"><span class="header-section-number">1.2.2.2</span> Boxplot of DCM patients</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>DCM_data <span class="ot">&lt;-</span> gxData <span class="sc">%&gt;%</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>           dplyr<span class="sc">::</span><span class="fu">select</span>(DCM_columns)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>DCM_data_group <span class="ot">&lt;-</span> <span class="fu">gather</span>(DCM_data) <span class="co"># melt also works, but it is deprecated</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(DCM_data_group, <span class="fu">aes</span>(<span class="at">x =</span> key, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="boxplot-of-hcm-patients" class="level4" data-number="1.2.2.3">
+<h4 data-number="1.2.2.3" class="anchored" data-anchor-id="boxplot-of-hcm-patients"><span class="header-section-number">1.2.2.3</span> Boxplot of HCM patients</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>HCM_data <span class="ot">&lt;-</span> gxData <span class="sc">%&gt;%</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>           dplyr<span class="sc">::</span><span class="fu">select</span>(HCM_columns)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>HCM_data_group <span class="ot">&lt;-</span> <span class="fu">gather</span>(HCM_data) <span class="co"># melt also works, but it is deprecated</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(HCM_data_group, <span class="fu">aes</span>(<span class="at">x =</span> key, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="boxplot-of-ppcm-patients" class="level4" data-number="1.2.2.4">
+<h4 data-number="1.2.2.4" class="anchored" data-anchor-id="boxplot-of-ppcm-patients"><span class="header-section-number">1.2.2.4</span> Boxplot of PPCM patients</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>PPCM_data <span class="ot">&lt;-</span> gxData <span class="sc">%&gt;%</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>           dplyr<span class="sc">::</span><span class="fu">select</span>(PPCM_columns)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>PPCM_data_group <span class="ot">&lt;-</span> <span class="fu">gather</span>(PPCM_data) <span class="co"># melt also works, but it is deprecated</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(PPCM_data_group, <span class="fu">aes</span>(<span class="at">x =</span> key, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="create-and-interpret-4-figures-containing-density-plots-for-all-samples-in-the-dataset-one-figure-for-dcm-one-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls." class="level3" data-number="1.2.3">
+<h3 data-number="1.2.3" class="anchored" data-anchor-id="create-and-interpret-4-figures-containing-density-plots-for-all-samples-in-the-dataset-one-figure-for-dcm-one-for-hcm-one-for-ppcm-and-one-for-the-healthy-controls."><span class="header-section-number">1.2.3</span> Create and interpret 4 figures containing density plots for all samples in the dataset, one figure for DCM, one for HCM, one for PPCM and one for the healthy controls.</h3>
+<section id="density-plot-of-all-the-values-from-the-nf-group-colored-by-sample" class="level4" data-number="1.2.3.1">
+<h4 data-number="1.2.3.1" class="anchored" data-anchor-id="density-plot-of-all-the-values-from-the-nf-group-colored-by-sample"><span class="header-section-number">1.2.3.1</span> Density plot of all the values from the NF group colored by sample</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(NF_data_group, <span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">color =</span> key)) <span class="sc">+</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="density-plot-of-all-the-values-from-the-nf-group" class="level4" data-number="1.2.3.2">
+<h4 data-number="1.2.3.2" class="anchored" data-anchor-id="density-plot-of-all-the-values-from-the-nf-group"><span class="header-section-number">1.2.3.2</span> Density plot of all the values from the NF group</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(NF_data_group, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The same code applies for the pther groups</p>
+</section>
+</section>
+<section id="assess-the-normality-of-all-samples-and-summarize-the-results-in-a-table-or-figure.-hint-try-shapiro.test" class="level3" data-number="1.2.4">
+<h3 data-number="1.2.4" class="anchored" data-anchor-id="assess-the-normality-of-all-samples-and-summarize-the-results-in-a-table-or-figure.-hint-try-shapiro.test"><span class="header-section-number">1.2.4</span> Assess the normality of all samples and summarize the results in a table or figure. (HINT: try ‘shapiro.test’)</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get random sample for all the samples</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>norm_df <span class="ot">&lt;-</span> <span class="fu">sample_n</span>(gxData, <span class="dv">5000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#slice(gxData, 5000:8000) %&gt;% </span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sapply</span>(., shapiro.test) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">2</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(sample, p_value) <span class="sc">%&gt;%</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">normality =</span> p_value <span class="sc">&lt;</span> <span class="fl">0.05</span>) </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>norm_df <span class="sc">%&gt;%</span> </span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(normality)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  normality     n
+  &lt;lgl&gt;     &lt;int&gt;
+1 TRUE        366</code></pre>
+</div>
+</div>
+</section>
+<section id="perform-a-principal-component-analysis-pca-visualize-the-results-and-color-by-the-disease-category-sex-and-other-variables-of-interest.-interpret-the-results-what-patterns-do-you-see" class="level3" data-number="1.2.5">
+<h3 data-number="1.2.5" class="anchored" data-anchor-id="perform-a-principal-component-analysis-pca-visualize-the-results-and-color-by-the-disease-category-sex-and-other-variables-of-interest.-interpret-the-results-what-patterns-do-you-see"><span class="header-section-number">1.2.5</span> Perform a principal component analysis (PCA), visualize the results and color by the disease category, sex and other variables of interest. Interpret the results: what patterns do you see?</h3>
+<p>HINT: use the functions ‘pca’ and ‘plotPcs’ from the package ‘pcaMethods’</p>
+<section id="calculate-the-pcas" class="level4" data-number="1.2.5.1">
+<h4 data-number="1.2.5.1" class="anchored" data-anchor-id="calculate-the-pcas"><span class="header-section-number">1.2.5.1</span> Calculate the PCAs</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Transpose dataframe to merge with the metadata</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>t_gxData <span class="ot">&lt;-</span> <span class="fu">t</span>(gxData)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate pca</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>pca_hf <span class="ot">&lt;-</span> <span class="fu">pca</span>(t_gxData, <span class="at">method =</span> <span class="st">"svd"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="summary-and-barplot-of-the-number-of-instances-in-the-pcas" class="level4" data-number="1.2.5.2">
+<h4 data-number="1.2.5.2" class="anchored" data-anchor-id="summary-and-barplot-of-the-number-of-instances-in-the-pcas"><span class="header-section-number">1.2.5.2</span> Summary and barplot of the number of instances in the PCAs</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get a short summary on the calculated model</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_hf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>svd calculated PCA
+Importance of component(s):
+                 PC1     PC2
+R2            0.2726 0.07351
+Cumulative R2 0.2726 0.34612</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pca_hf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="merge-pca-scores-with-metadata-for-plotting" class="level4" data-number="1.2.5.3">
+<h4 data-number="1.2.5.3" class="anchored" data-anchor-id="merge-pca-scores-with-metadata-for-plotting"><span class="header-section-number">1.2.5.3</span> Merge pca scores with metadata for plotting</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge pca scores with metadata</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>df_hf <span class="ot">&lt;-</span> <span class="fu">merge</span>(<span class="fu">scores</span>(pca_hf), sampleInfo, <span class="at">by =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="plot-the-pcas-with-the-default-them-of-plotspcs" class="level4" data-number="1.2.5.4">
+<h4 data-number="1.2.5.4" class="anchored" data-anchor-id="plot-the-pcas-with-the-default-them-of-plotspcs"><span class="header-section-number">1.2.5.4</span> Plot the PCAs with the default them of plotsPcs</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Create scatteplot of the PCA with ggplot version 2</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plotPcs</span>(pca_hf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="plot-the-pcas-with-ggplot" class="level4" data-number="1.2.5.5">
+<h4 data-number="1.2.5.5" class="anchored" data-anchor-id="plot-the-pcas-with-ggplot"><span class="header-section-number">1.2.5.5</span> Plot the PCAs with ggplot</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Create scatteplor of the PCA with ggplot version 1</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_hf, <span class="fu">aes</span>(PC1, PC2, <span class="at">shape=</span>gender, <span class="at">color=</span>etiology)) <span class="sc">+</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="fu">paste</span>(<span class="st">"PC1"</span>, pca_hf<span class="sc">@</span>R2[<span class="dv">1</span>] <span class="sc">*</span> <span class="dv">100</span>, <span class="st">"% of the variance"</span>)) <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="fu">paste</span>(<span class="st">"PC2"</span>, pca_hf<span class="sc">@</span>R2[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">100</span>, <span class="st">"% of the variance"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="MSB1005_SkillsTrainingWeek3_2022_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./MSB1005_SkillsTrainingWeek4_2022.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Week4 - Introduction to Gene expression analysis part 2</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
