@@ -1,0 +1,21 @@
+project:
+  type: book
+
+book:
+  title: "R programming skills summary - Experimental Design and Data Management 2022"
+  author: "Sebastian Ayala-Ruano"
+  date: today
+  chapters:
+    - index.qmd
+    - MSB1005_SkillsTrainingWeek3_2022.qmd
+    - MSB1005_SkillsTrainingWeek4_2022.qmd
+
+format:
+  html:
+    theme: cosmo
+  pdf:
+    documentclass: scrreprt
+execute:
+  freeze: auto
+
+

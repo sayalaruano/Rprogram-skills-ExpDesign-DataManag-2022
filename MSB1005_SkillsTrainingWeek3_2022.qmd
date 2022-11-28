@@ -1,0 +1,359 @@
+---
+title: "Week3 - Introduction to Gene expression analysis part 1"
+author: "Sebastian Ayala-Ruano"
+date: today
+output: html_document
+---
+
+This R script serves as a scaffold for adding the code required to fulfill the assignments. It includes the assignments as well as a few hints.
+
+Add the necessary code and type your answers in this document for your own record.
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Import libraries
+library(ggplot2)
+library(biomaRt)
+library(pcaMethods)
+library(readr)
+library(dplyr)
+library(tibble)
+library(reshape2)
+library(conflicted)
+library(tidyr)
+library(purrr)
+```
+
+## Assignment 1: Importing the data and inspecting sample information
+
+After unzipping the required transcriptomics (gene expression) file and sample information file, import both files as two separate objects. First set the active working directory to the folder containing the files.
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Load data
+gxData <- read_delim("Data/MAGNET_GeneExpressionData_CPM_19112020.txt", delim ="\t")
+sampleInfo <- read_csv("Data/MAGNET_SampleData_18112022.csv")
+
+# Add gene ID as the row names
+gxData <- column_to_rownames(gxData, var = "EnsemblGeneID")
+
+# Add sample name as the row names
+sampleInfo <- column_to_rownames(sampleInfo, var = "sample_name")
+```
+
+### Using the sampleInfo object, answer the following questions: What does DCM, HCM and PPCM stand for? (hint: Google)
+
+* **DCM:** Dilated cardiomyopathy
+* **HCM:** Hypertrophic cardiomyopathy
+* **PPCM:** Postpartum cardiomyopathy
+
+### How many co-variates are there? What do they mean? What type of value does each contain? (e.g. binary, continuous, categorical)
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: true
+# Number of covariates
+n_co_variates = ncol(sampleInfo)
+
+# Types of variables of covariates
+str(sampleInfo)
+```
+
+The number of co-variates is **19**.
+
+Covariates are variables known to affect disease susceptibility and are independent of tested genotypes at the population level. They are used to control for confounding factors in the analysis of the association between a disease and a genetic variant.
+
+### Are all variables measured in all individuals?
+
+No, there are NA values in some columns, which means that these values were not measured.
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: true
+na_values <- sampleInfo %>%
+  dplyr::select(everything()) %>% 
+  summarise_all(list(~ sum(is.na(.))))
+
+na_values
+```
+
+### Using the sampleInfo object, create an overview of the sample sizes and characteristics in each disease category: How many individuals are healthy? How many suffer from DCM, HCM, PPCM?
+
+**Method 1**
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+etiology1 <- sampleInfo %>%
+  dplyr::select(etiology) %>% 
+  table()
+etiology1
+```
+
+**Method 2**
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+etiology2 <- sampleInfo %>%
+  count(etiology)
+
+etiology2
+```
+
+**Method 3**
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+etiology3 <- sampleInfo %>%
+  group_by(etiology) %>% 
+  tally()
+
+etiology3
+```
+
+### What is the average age in each disease category?
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+avg_etiology_by_age <- sampleInfo %>%
+  group_by(etiology) %>%
+  summarise(
+    n = n(),
+    age = mean(age, na.rm = TRUE)
+  )
+
+avg_etiology_by_age
+```
+
+### How many male and female individuals are there in each disease category?
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+count_etiology_by_gender <- sampleInfo %>%
+  group_by(etiology) %>%
+  count(gender)
+
+count_etiology_by_gender
+```
+
+### Are there other characteristics that are strikingly different between groups?
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+summary(sampleInfo)
+```
+
+An example of two features that are different between groups:
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+ggplot(sampleInfo, aes(x= LVEF, y = lv_mass, color = etiology)) +
+  geom_point()
+```
+
+## Assignment 2: Data exploration on the sample level
+
+### The gene expression dataset contains so-called log2-transformed CPM (counts per million) values: How are CPM values created from raw RNA-sequencing count data? And why is this needed? (HINT: Google "what the fpkm")
+
+FPKM stands for fragments per kilobase of exon per million mapped fragments. It is used specifically in paired-end RNA-seq experiments. 
+The interpretation of FPKM is that if you sequence your RNA sample again, you expect to see for gene i, FPKMi reads divided by gene i 
+length over a thousand and divided by the total number of reads mapped over a million.
+
+### Create and interpret 4 figures containing boxplots for all samples in the dataset, one for DCM, one figure for HCM, one for PPCM and one for the healthy controls.
+
+Create dataframes with information of the samples in each disease category.
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Create a vector of the names of etiologies
+names_et <- etiology2$etiology
+
+# Get the names of the samples per etiology
+for (i in names_et){
+    # Define the name of the dataframes with the list of samples per etiology
+    var_name <- paste(i,"columns",sep = "_")
+    # Get the dataframes with the list of sample names per etiology
+    df <- rownames_to_column(sampleInfo, var = "sample") %>% 
+              dplyr::filter(etiology == i) %>% 
+              dplyr::select(sample) %>% 
+              pull(sample)
+    # Assign the names to the dataframes
+    assign(var_name, df)
+}
+```
+
+#### Boxplot of NF patients
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+NF_data <- gxData %>%
+           dplyr::select(NF_columns)
+
+NF_data_group <- gather(NF_data) # melt also works, but it is deprecated
+
+ggplot(NF_data_group, aes(x = key, y = value)) +
+  geom_boxplot()
+```
+
+#### Boxplot of DCM patients
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+DCM_data <- gxData %>% 
+           dplyr::select(DCM_columns)
+
+DCM_data_group <- gather(DCM_data) # melt also works, but it is deprecated
+
+ggplot(DCM_data_group, aes(x = key, y = value)) +
+  geom_boxplot()
+```
+
+#### Boxplot of HCM patients
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+HCM_data <- gxData %>% 
+           dplyr::select(HCM_columns)
+
+HCM_data_group <- gather(HCM_data) # melt also works, but it is deprecated
+
+ggplot(HCM_data_group, aes(x = key, y = value)) +
+  geom_boxplot()
+```
+
+#### Boxplot of PPCM patients
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+PPCM_data <- gxData %>% 
+           dplyr::select(PPCM_columns)
+
+PPCM_data_group <- gather(PPCM_data) # melt also works, but it is deprecated
+
+ggplot(PPCM_data_group, aes(x = key, y = value)) +
+  geom_boxplot()
+```
+
+### Create and interpret 4 figures containing density plots for all samples in the dataset, one figure for DCM, one for HCM, one for PPCM and one for the healthy controls.
+
+#### Density plot of all the values from the NF group colored by sample
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+ggplot(NF_data_group, aes(x = value, color = key)) +
+  geom_density(alpha = 0.2)
+```
+
+#### Density plot of all the values from the NF group 
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+ggplot(NF_data_group, aes(x = value)) +
+  geom_density()
+```
+
+The same code applies for the pther groups
+
+### Assess the normality of all samples and summarize the results in a table or figure. (HINT: try 'shapiro.test')
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Get random sample for all the samples
+norm_df <- sample_n(gxData, 5000) %>%
+  #slice(gxData, 5000:8000) %>% 
+  sapply(., shapiro.test) %>% 
+  as_tibble() %>% 
+  slice(2) %>% 
+  gather(sample, p_value) %>%
+  mutate(normality = p_value < 0.05) 
+
+norm_df %>% 
+  count(normality)
+```
+
+### Perform a principal component analysis (PCA), visualize the results and color by the disease category, sex and other variables of interest. Interpret the results: what patterns do you see?
+HINT: use the functions 'pca' and 'plotPcs' from the package 'pcaMethods'
+
+#### Calculate the PCAs 
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Transpose dataframe to merge with the metadata
+t_gxData <- t(gxData)
+
+# Calculate pca
+pca_hf <- pca(t_gxData, method = "svd")
+```
+
+#### Summary and barplot of the number of instances in the PCAs
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Get a short summary on the calculated model
+summary(pca_hf)
+plot(pca_hf)
+```
+
+#### Merge pca scores with metadata for plotting
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Merge pca scores with metadata
+df_hf <- merge(scores(pca_hf), sampleInfo, by = 0)
+```
+
+
+#### Plot the PCAs with the default them of plotsPcs
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+## Create scatteplot of the PCA with ggplot version 2
+plotPcs(pca_hf)
+```
+
+#### Plot the PCAs with ggplot
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+## Create scatteplor of the PCA with ggplot version 1
+ggplot(df_hf, aes(PC1, PC2, shape=gender, color=etiology)) +
+  geom_point() +
+  xlab(paste("PC1", pca_hf@R2[1] * 100, "% of the variance")) +
+  ylab(paste("PC2", pca_hf@R2[2] * 100, "% of the variance"))
+```
+

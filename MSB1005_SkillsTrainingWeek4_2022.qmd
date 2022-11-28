@@ -1,0 +1,459 @@
+---
+title: "Week4 - Introduction to Gene expression analysis part 2"
+author: "Sebastian Ayala Ruano"
+date: today
+output: html_document
+---
+
+This R script serves as a scaffold for adding the code required to fulfill the assignments. It includes the assignments as well as a few hints.
+
+Add the necessary code and type your answers in this document for your own record.
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Import libraries
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(tibble)
+library(reshape2)
+library(conflicted)
+library(tidyr)
+library(purrr)
+library(limma)
+library(edgeR)
+library(corrmorant)
+```
+
+## Assignment 3: Data exploration on the gene level
+
+### Convert the CPM values to FPKM values. For some of the exercises below, we need to convert the CPM expression values to FPKM expression values.
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Load data
+geneTotExonLengths <- read_delim("Data/MAGNET_exonLengths.txt", delim = "\t")
+gxData <- read_delim("Data/MAGNET_GeneExpressionData_CPM_19112020.txt", delim = "\t")
+sampleInfo <- read_csv("Data/MAGNET_SampleData_18112022.csv")
+
+# Add gene ID as the row names
+gxData <- column_to_rownames(gxData, var = "EnsemblGeneID")
+geneTotExonLengths <- column_to_rownames(geneTotExonLengths, var = "EnsemblGeneID")
+
+# Check that row names are the same
+all(rownames(geneTotExonLengths) == rownames(gxData)) # TRUE (just a check)
+
+# Add sample name as the row names
+sampleInfo <- column_to_rownames(sampleInfo, var = "sample_name")
+
+# Convert CPM expression values to FPKM
+cpm2fpkm <- function(x) {
+	t <- 2^(x) * 1E3 / geneTotExonLengths[, 1] # . before variable makes it a hidden variable
+}
+gxData_fpkm <- cpm2fpkm(gxData)
+```
+
+### What does FPKM stand for? How does this measure differ from CPM? (Google)
+These metrics attempt to normalize for sequencing depth and gene length. Normalized expression units are necessary to remove technical biases in 
+sequenced data such as depth of sequencing and gene length, and make gene expressions directly comparable within and across samples. More sequencing depth 
+produces more read count for a gene expressed at the same level and differences in gene length generate unequal reads count for genes expressed at the same level.
+
+CPM is a basic gene expression unit that normalizes only for sequencing depth (depth-normalized counts). It is biased in some applications where the gene 
+length influences gene expression, such as RNA-seq.
+
+```{=latex}
+\begin{equation}{}
+CPM = \frac{N \;reads \;mapped \;to \;gene \times 10^{6}}{Total \;N \;of \;mapped \;reads}
+\end{equation}
+```
+
+RPKM (reads per kilobase of transcript per million reads mapped) is a gene expression unit that measures the expression levels (mRNA abundance) of genes 
+or transcripts. RPKM is a gene length normalized expression unit that is used for identifying the differentially expressed genes by comparing the RPKM values 
+between different experimental conditions. Generally, the higher the RPKM of a gene, the higher the expression of that gene.
+
+```{=latex}
+\begin{equation}{}
+RPKM = \frac{N \;reads \;mapped \;to \;gene \times 10^{3} \times 10^{6}}{Total 
+\;N \;of \;mapped \;reads \times  gene \;length \;in \;bp}
+\end{equation}
+```
+
+Here, 10^3 normalizes for gene length and 10^6 for sequencing depth factor.
+
+FPKM (fragments per kilobase of exon per million mapped fragments) is a gene expression unit which is analogous to RPKM. FPKM is used especially for 
+normalizing counts for paired-end RNA-seq data in which two (left and right) reads are sequenced from the same DNA fragment. Generally, the higher 
+the FPKM of a gene, the higher the expression of that gene.
+
+When we map paired-end data, both reads or only one read with high quality from a fragment can map to reference sequence. To avoid confusion or multiple 
+counting, the fragments to which both or single read mapped are counted and represented for FPKM calculation.
+
+### In you own words, describe what the code above does.
+The code takes the gene expression values in CPM and normalize them by the length of the genes, according to the formula expressed before.
+
+### Can we compare the FPKM value of gene A between two samples to state in which sample gene A is more highly expressed? 
+No, because FPKM values are normalized by the length of genes, which means that we cannot compare the values across different samples.
+
+### Can we compare the FPKM value of gene A to gene B in a single sample to state which gene is more highly expressed?
+Yes, because FPKM values are normalized by the length of the genes.
+
+### Can we compare the CPM values of gene A between two samples to determine in which sample gene A is more highly expressed? 
+Yes, because CPM values are normalized by the sequencing depth (depth-normalized counts) and they do not take into account the length of genes for the 
+normalization process.
+
+### Can we compare the CPM value of gene A to the value of gene B in a single sample to determine which gene is more highly expressed?
+No, because CPM values are not normalized by the length of the genes.
+
+### Using the FPKM values, answer the following questions:
+
+#### What are the IDs of the 5 highest expressed genes? What is their function according to the GeneCards website?
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Create a column with the mean of expression values of all samples
+exp_mean_df <- gxData_fpkm %>%
+  rownames_to_column(var = "geneID") %>% 
+  rowwise() %>%
+  mutate(exp_mean = mean(c_across(C00039:P01640))) %>%
+  column_to_rownames(var = "geneID") %>% 
+  select(exp_mean)
+```
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Select the 5 most expressed genes
+max5_genes_mean <- exp_mean_df %>%
+  slice_max(n= 5, exp_mean)
+```
+
+|Gene ID|Name|Function|
+|---|---|---|
+|ENSG00000198804|MT-CO1|Contributes to cytochrome-c oxidase activity|
+|ENSG00000198899|MT-ATP6|Contributes to proton-transporting ATP synthase activity|
+|ENSG00000198938|MT-CO3|Involved in respiratory chain complex IV assembly|
+|ENSG00000198712|MT-CO2|Contributes to cytochrome-c oxidase activity|
+|ENSG00000198886|MT-ND4|Enables NADH dehydrogenase (ubiquinone) activity|
+
+All of the genes are involved in processes related to mitochondria activity, which make sense because the dataset has muscle samples.
+
+#### What are the IDs of the 5 lowest expressed genes? What is their function according to the GeneCards website?
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Select the 5 lowest expressed genes
+min5_genes_mean <- exp_mean_df %>%
+  slice_min(n = 5, exp_mean)
+```
+
+|Gene ID|Name|Function|
+|---|---|---|
+|ENSG00000015568|RGPD5|RAN is a small GTP-binding protein of the RAS superfamily that is associated with the nuclear membrane|
+|ENSG00000162105|SHANK2|This gene encodes a protein that is a member of the Shank family of synaptic proteins that may function as molecular scaffolds in the postsynaptic density of excitatory synapses|
+|ENSG00000267586|LINC00907|RNA Gene, and is affiliated with the lncRNA class|
+|ENSG00000215126|ZNG1F|Predicted to enable ATP binding activity|
+|ENSG00000183914|DNAH2|Dyneins are microtubule-associated motor protein complexes|
+
+There are pseudogenes, RNA genes, and others related to different processes (i.e. synaptic genes).
+
+#### What are the IDs of the 5 most variable genes? What is their function according to the GeneCards website?
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Create a column with the mean of expression values of all samples
+exp_var_df <- gxData %>%
+  rownames_to_column(var = "geneID") %>% 
+  rowwise() %>%
+  mutate(exp_var = var(c_across(C00039:P01640))) %>%
+  column_to_rownames(var = "geneID") %>% 
+  select(exp_var)
+```
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Select the 5 most variable genes
+max5_genes_var <- exp_var_df %>% 
+  slice_max(n= 5, exp_var)
+```
+
+|Gene ID|Name|Function|
+|---|---|---|
+|ENSG00000198692|EIF1AY|Eukaryotic Translation Initiation Factor 1A Y-Linked|
+|ENSG00000129824|RPS4Y1|Ribosomal Protein S4 Y-Linked 1|
+|ENSG00000114374|USP9Y|Ubiquitin Specific Peptidase 9 Y-Linked|
+|ENSG00000067048|DDX3Y|DEAD-Box Helicase 3 Y-Linked|
+|ENSG00000012817|KDM5D|Lysine Demethylase 5D - encodes a protein containing zinc finger domains|
+
+4 of these genes are related to Y chromosome, which are absent in the female samples.
+
+**Note: **By using the FPKM dataset, we got the same genes as the 5 mots highly expressed.
+
+##### What are the IDs of the 5 least variable (= stable!) genes? What is their function according to the GeneCards website?
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Select the 5 least variable genes
+min5_genes_var <- exp_var_df %>% 
+  slice_min(n= 5, exp_var)
+```
+
+|Gene ID|Name|Function|
+|---|---|---|
+|ENSG00000136709|WD Repeat Domain 33|WD repeats are conserved regions, which may facilitate formation of heterotrimeric or multiprotein complexes|
+|ENSG00000089053|ANAPC5|Anaphase Promoting Complex Subunit 5|
+|ENSG00000111361|EIF2B1|Eukaryotic Translation Initiation Factor 2B Subunit Alpha|
+|ENSG00000086475|SEPHS1|Selenophosphate Synthetase 1|
+|ENSG00000106609|TMEM248|Transmembrane Protein 248|
+
+All of the genes are related to conserved cellular functions - house keeping genes.
+
+### Using the CPM values, answer the following questions: 
+
+#### Which 5 genes show the strongest correlation to age in the control group?
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Get the dataframe with the list of sample names with NF
+NF_columns <- rownames_to_column(sampleInfo, var = "sample") %>% 
+          dplyr::filter(etiology == "NF") %>% 
+          dplyr::select(sample) %>% 
+          pull(sample)
+
+# Get the gene expression data from the NF patients
+NF_data <- gxData %>%
+           dplyr::select(NF_columns)
+
+# Transpose the dataframe to have genes as columns 
+NF_data <- as.data.frame(t(NF_data))
+
+# Get the metadata from NF patients
+t_sampleInfo <- as.data.frame(t(sampleInfo))
+
+NF_metadata <- t_sampleInfo %>%
+               rownames_to_column(var = "covariate") %>%
+               dplyr::select(c(NF_columns, covariate)) %>%
+               column_to_rownames(var = "covariate")
+
+# Transpose the dataframe to have age as column
+NF_metadata <- as.data.frame(t(NF_metadata))
+
+# Add age column into the gene expression dataframe
+NF_data <- NF_data %>%
+            mutate(age = NF_metadata$age)
+```
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Calculate correlation values
+data_cor <- cor(NF_data[ , colnames(NF_data) != "age"],
+                as.numeric(NF_data$age))
+
+data_cor <- as.data.frame(data_cor)
+
+# Select the 5 most correlated genes with age in the control group
+corr5_genes_age <- data_cor %>% 
+  arrange(desc(abs(V1))) %>% 
+  slice_head(n= 5)
+
+# Get the gene expression data
+corr5_gene_data <- NF_data %>%
+           dplyr::select(row.names(corr5_genes_age))
+
+# Calculate significance (p value) of the 5 most correlated genes with age
+corr5_genes_age[1,2] <- cor.test(corr5_gene_data$ENSG00000244681, as.numeric(NF_data$age))$p.value
+corr5_genes_age[2,2] <- cor.test(corr5_gene_data$ENSG00000244694, as.numeric(NF_data$age))$p.value 
+corr5_genes_age[3,2] <- cor.test(corr5_gene_data$ENSG00000182264, as.numeric(NF_data$age))$p.value 
+corr5_genes_age[4,2] <- cor.test(corr5_gene_data$ENSG00000154080, as.numeric(NF_data$age))$p.value 
+corr5_genes_age[5,2] <- cor.test(corr5_gene_data$ENSG00000250337, as.numeric(NF_data$age))$p.value
+
+colnames(corr5_genes_age) <- c("estimate", "p_value")
+```
+
+- **Is the correlation positive or negative?**
+
+4 of the values are positive and one is negative
+
+- **Is the correlation significant?**
+
+Yes, all of the correlations were significant
+
+#### What is their function according to the GeneCards website? Are they genes of which the expression is known to change with age (use Pubmed)?
+
+|Gene ID|Name|Function|
+|---|---|---|
+|ENSG00000244681|MTHFD2P1|Pseudogene|
+|ENSG00000244694|PTCHD4|Predicted to be integral component of membrane|
+|ENSG00000182264|IZUMO1|The sperm-specific protein Izumo is essential for sperm-egg plasma membrane binding and fusion|
+|ENSG00000154080|CHST9|Catalyzes the transfer of sulfate to position 4 of non-reducing N-acetylgalactosamine (GalNAc) residues in both N-glycans and O-glycans|
+|ENSG00000250337|PURPL|RNA Gene, and is affiliated with the lncRNA class. Diseases associated with colorectal cancer and myasthenic syndrome|
+
+#### Visualize the result for at least 1 gene (HINT: CPM values on the y-axis, age in years on the x-axis)
+
+**Scatter plot of one gene vs age**
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Add age column into the 5 most correlated genes dataframe
+corr5_gene_data <- corr5_gene_data %>%
+            mutate(Age = as.numeric(NF_metadata$age), .before = 1)
+
+corr1gene_age <- corr5_gene_data %>%
+        select(Age, ENSG00000244681)
+
+corr1gene_age_plot <- ggplot(corr1gene_age, aes(x = Age, y = ENSG00000244681)) +
+  geom_point() +
+  labs(x = "Age", y = "ENSG00000244681 Expression") +
+  scale_x_continuous(n.breaks = 10.0)
+
+corr1gene_age_plot
+```
+
+**Scatter plots, correlation values, and distributions of all genes and age**
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+
+corr_plot_allgenes <- ggcorrm(data = corr5_gene_data) +
+  theme_corrm(base_size = 6) +
+  theme(axis.text.x = element_text(angle = 90, size = 8),
+        axis.text.y = element_text(size = 8),
+        strip.text.x = element_text(size = 5),
+        strip.text.y = element_text(size = 5),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 8)) +
+  lotri(geom_point(alpha = 0.5)) +
+  lotri(geom_smooth(colour = "red4")) +
+  utri_heatmap(alpha = 0.5, corr_method = "spearman") +
+  utri_corrtext(corr_method = "spearman", size = 3.5) +
+  dia_histogram(lower = 0.1, fill = "grey80", color = 1) +
+  dia_density(lower = 0.1, alpha = .1, colour = "red4") +
+  scale_fill_gradient2(low = "white", mid = "red3", high = "red4",
+                       midpoint = 0.5, space = "rgb",
+                       guide = guide_colorbar(title = "Correlation coefficient"),
+                       limits = c(0, 1))
+corr_plot_allgenes
+```
+
+## Assignment 4: Differential gene expression analysis. 
+Now that we have explored the gene expression data, it is time to perform a differential gene expression analysis.
+
+### What is differential gene expression analysis (DGEA)? What are some of the most common packages in R for DGEA?
+Differential expression analysis means taking the normalised read count data and performing statistical analysis to discover quantitative changes in  
+expression levels between experimental groups.
+
+**R packages:**
+
+- [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)
+- [limma](https://bioconductor.org/packages/release/bioc/html/limma.html)
+
+We are going to use the limma package to perform a DGEA. We need to use the CPM normalized values. Have a look at the limma guide section 15.4:
+(https://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf)
+
+### Implement the steps noted in the limma guide for the MAGNET dataset. Start with a DGEA between DCM patients and healthy controls.
+
+#### Limma-trend
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Convert counts to logCPM values
+logCPM <- cpm(gxData, log = TRUE, prior.count = 3)
+
+# Create design matrix
+design = model.matrix(~0 + sampleInfo$etiology)
+
+# Apply limma pipeline
+fit <- lmFit(logCPM, design)
+fit <- eBayes(fit, trend = TRUE)
+topTable(fit, coef = ncol(design))
+```
+
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+
+# Give more weight to fold-changes in the gene ranking
+fit <- lmFit(logCPM, design)
+fit <- treat(fit, lfc = log2(1.2), trend = TRUE)
+topTreat(fit, coef = ncol(design))
+```
+
+Results show the p value of 0 in some genes, which means that something is wrong.
+
+### Which co-variates should be taken along for correction? (confounding; see the "alcohol causes lung cancer" example from the lecture)
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+# Convert counts to logCPM values
+logCPM <- cpm(gxData, log = TRUE, prior.count = 3)
+
+# Create design matrix considering confounding variables
+design = model.matrix(~0 + etiology + gender + age, data = sampleInfo)
+
+# Apply limma pipeline with confounding variables
+fit <- lmFit(logCPM, design)
+
+cont.matrix <- makeContrasts(DCMvsControl = etiologyDCM - etiologyNF,
+                             levels = design)
+
+fit <- contrasts.fit(fit, cont.matrix)
+
+efit <- eBayes(fit, trend = TRUE)
+
+dgeRes <- topTable(efit, coef = 'DCMvsControl', number = nrow(gxData))
+
+glimpse(dgeRes)
+```
+
+After including the cofounding variables, the p values are not 0, which means that 
+the cofounding variables are important for the analysis.
+
+### Copy the top 200 differentially expressed genes to for a quick [GO enrichment analysis](http://cbl-gorilla.cs.technion.ac.il/). Which processes are changed between DCM and controls? Do these processes make biological sense? (quick literature check!)
+```{r }
+#| echo: true
+#| warning: false
+#| message: false
+
+# Select the 200 most correlated genes with age in the control group
+to200_corr_genes <- dgeRes %>%
+  slice_head(n = 200) %>%
+  rownames_to_column(var = "Gene_ID")  %>%
+  select(Gene_ID)
+
+# Select the names of all genes in the control group
+all_corr_genes <- dgeRes %>%
+  rownames_to_column(var = "Gene_ID")  %>%
+  select(Gene_ID)
+
+# Export target list to csv file
+write_csv(to200_corr_genes, "Outputs/to200_corr_genes.csv", col_names = FALSE)
+
+# Export background list to csv file
+write_csv(all_corr_genes, "Outputs/all_corr_genes.csv", col_names = FALSE)
+```
+
+In the [GOrilla server](http://cbl-gorilla.cs.technion.ac.il/), the inputs are the target and background tables exported in the previous step. 
+The results are shown in the following figure:
+
+![GOrilla results](Outputs/gorilla_results.png)
+
+The results show that the most enriched GO terms are related to inflammation and 
+structural processed, and the immune system, which is consistent with the literature.
